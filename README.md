@@ -44,7 +44,7 @@ It enables structured invoice creation, installment management, cancellation han
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/your-username/invoice-web-app.git
+git clone https://github.com/moai379/invoice-web-app.git
 cd invoice-web-app
 ```
 2. Install dependencies:
