@@ -1,49 +1,106 @@
-<%- include('layout', { title: 'Invoice #' + invoice.invoice_number }) %>
+<%- include('layout') %>
 
-<form class="no-print" action="/" method="GET">
-  <button type="submit" style="background: forestgreen;">Home</button>
-</form>
+<div class="invoice-header">
+  <div class="company-left">
+    <img src="/assets/logo.png" class="logo">
 
-<% if (invoice.status === 'CANCELLED') { %>
-  <div class="cancel-watermark">CANCELLED</div>
-<% } %>
+    <div class="company-details">
+      <strong><%= company.name %>,</strong><br>
+      <%= company.address1 %><br>
+      <%= company.address2 %><br>
+      <%= company.city %><br>
+      <%= company.phone %><br>
+      <%= company.email %>
+    </div>
+  </div>
 
-<img src="/assets/logo.png" height="60">
+  <div class="company-right">
+    <h1>Standard Invoice</h1>
+  </div>
+</div>
 
-<h2>Standard Invoice</h2>
+<hr class="divider">
 
-<p><b>Invoice No:</b> <%= invoice.invoice_number %></p>
-<p><b>Client:</b> <%= invoice.client %></p>
-<p><b>Total:</b> ₹<%= invoice.total %></p>
-<p><b>Paid:</b> ₹<%= invoice.paid %></p>
-<p><b>Balance:</b> ₹<%= invoice.balance %></p>
+<div class="invoice-meta">
+  <div class="bill-to">
+    <strong>Bill To</strong><br>
+    <%= invoice.client %><br>
+    <%= invoice.client_address %>
+  </div>
 
-<% if (installments.length > 0) { %>
+  <div class="invoice-info">
+    <div><span>Invoice Number</span> <b><%= invoice.invoice_number %></b></div>
+    <div><span>Date</span> <%= invoice.invoice_date %></div>
+    <div><span>Due Date</span> <%= invoice.due_date %></div>
+    <div><span>Terms</span> End of Month</div>
+  </div>
+</div>
+
+<table class="invoice-table">
+  <thead>
+    <tr>
+      <th>Description</th>
+      <th>Quantity</th>
+      <th>Unit price</th>
+      <th>Amount</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <%= invoice.description %><br>
+        <small>(<%= invoice.reference %>)</small>
+      </td>
+      <td>1</td>
+      <td>Rs. <%= invoice.total %></td>
+      <td>Rs. <%= invoice.total %></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="totals">
+  <div class="totals-row">
+    <span>Total</span>
+    <span>Rs. <%= invoice.total %></span>
+  </div>
+  <div class="totals-row">
+    <span>Paid Amount</span>
+    <span>Rs. <%= invoice.paid %></span>
+  </div>
+  <div class="totals-row balance">
+    <span>Balance Due</span>
+    <span>Rs. <%= invoice.balance %></span>
+  </div>
+</div>
+
+<% -include('terms') %>
+
+<div class="signature">
+  <div class="sign-box">
+    <strong>AUTHORIZED SIGNATORY</strong><br><br>
+    <img src="/assets/signature.png" class="signature-img"><br>
+    (<%= company.signatory %>)
+  </div>
+</div>
+
+<% if (invoice.installment_mode !== 'NONE' && installments.length) { %>
   <div class="page-break">
     <h3>Installment Schedule</h3>
-
-    <table border="1" width="100%">
+    <table>
       <tr>
         <th>S.No</th>
-        <th>Total Amount</th>
-        <th>Paid Amount</th>
+        <th>Amount</th>
         <th>Due On</th>
         <th>Paid On</th>
       </tr>
-
-      <% installments.forEach((row, i) => { %>
+      <% installments.forEach((i, idx) => { %>
         <tr>
-          <td><%= i + 1 %></td>
-          <td>₹<%= row.amount %></td>
-          <td><%= row.paid_on ? '₹' + row.amount : '-' %></td>
-          <td><%= row.due_on %></td>
-          <td><%= row.paid_on || '-' %></td>
+          <td><%= idx + 1 %></td>
+          <td>Rs. <%= i.amount %></td>
+          <td><%= i.due_on %></td>
+          <td><%= i.paid_on || '-' %></td>
         </tr>
       <% }) %>
     </table>
   </div>
 <% } %>
-
-<br><br>
-<img src="/assets/signature.png" height="50">
-<p>Authorized Signatory</p>

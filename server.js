@@ -1,4 +1,4 @@
-
+require('dotenv').config();
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const puppeteer = require('puppeteer');
@@ -14,6 +14,17 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static('public'));
 
+app.locals.company = {
+  name: process.env.COMPANY_NAME,
+  address1: process.env.COMPANY_ADDRESS1,
+  address2: process.env.COMPANY_ADDRESS2,
+  city: process.env.COMPANY_CITY,
+  phone: process.env.COMPANY_PHONE,
+  email: process.env.COMPANY_EMAIL,
+  signatory: process.env.COMPANY_SIGNATORY
+};
+
+
 const db = new sqlite3.Database('./database.db');
 
 db.serialize(() => {
@@ -26,8 +37,16 @@ db.serialize(() => {
     total INTEGER,
     paid INTEGER,
     balance INTEGER,
-    has_installments INTEGER
+    status TEXT DEFAULT 'ACTIVE',
+    description TEXT,
+    reference TEXT,
+    invoice_date TEXT,
+    due_date TEXT,
+    terms TEXT,
+    installment_mode TEXT,
+    pdf_path TEXT
   )`);
+
 
   db.run(`CREATE TABLE IF NOT EXISTS installments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -92,8 +111,16 @@ app.get('/', (req, res) => {
       "SELECT status, COUNT(*) as count FROM invoices GROUP BY status",
       (err2, rows) => {
 
+        if (err2) {
+          console.error('Status count query failed:', err2.message);
+          rows = [];
+        }
+
         const counts = { ACTIVE: 0, CANCELLED: 0 };
-        rows.forEach(r => counts[r.status] = r.count);
+
+        rows.forEach(r => {
+          counts[r.status] = r.count;
+        });
 
         res.render('list', {
           title: 'Invoices',
@@ -113,33 +140,66 @@ app.get('/new', (req, res) => {
 
 app.post('/new', (req, res) => {
   const total = parseInt(req.body.total);
-  const months = parseInt(req.body.months || 0);
-  const hasInst = req.body.inst ? 1 : 0;
+  const mode = req.body.installment_mode || 'NONE';
 
   getNextInvoiceNumber((invNo) => {
-    db.run(
-      `INSERT INTO invoices 
-       (invoice_number, client, total, paid, balance, has_installments)
-       VALUES (?,?,?,?,?,?)`,
-      [invNo, req.body.client, total, 0, total, hasInst],
-      function (err) {
 
+    db.run(
+      `INSERT INTO invoices
+       (invoice_number, client, total, paid, balance, status,
+        description, reference, invoice_date, due_date, terms, installment_mode)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+      [
+        invNo,
+        req.body.client,
+        total,
+        0,
+        total,
+        'ACTIVE',
+        req.body.description,
+        req.body.reference,
+        req.body.invoice_date,
+        req.body.due_date,
+        req.body.terms,
+        mode
+      ],
+      function (err) {
         if (err) {
-          console.error('INSERT FAILED:', err);
-          return res.status(500).send('DB insert failed');
+          console.error(err);
+          return res.status(500).send(err.message);
         }
 
-        console.log('INSERTED INVOICE ID:', this.lastID);
+        const invoiceId = this.lastID;
 
-        if (hasInst && months > 0) {
+        // EQUAL INSTALLMENTS
+        if (mode === 'EQUAL') {
+          const months = parseInt(req.body.months);
           const per = Math.floor(total / months);
+
           for (let i = 1; i <= months; i++) {
             let d = new Date();
             d.setMonth(d.getMonth() + i);
+
             db.run(
-              `INSERT INTO installments (invoice_id, amount, due_on, paid_on)
-               VALUES (?,?,?,NULL)`,
-              [this.lastID, per, d.toISOString().slice(0,10)]
+              `INSERT INTO installments (invoice_id, amount, due_on)
+               VALUES (?,?,?)`,
+              [invoiceId, per, d.toISOString().slice(0,10)]
+            );
+          }
+        }
+
+        // MANUAL INSTALLMENTS
+        if (mode === 'MANUAL') {
+          const amounts = req.body.manual_amount || [];
+          const dues = req.body.manual_due || [];
+
+          for (let i = 0; i < amounts.length; i++) {
+            if (!amounts[i] || !dues[i]) continue;
+
+            db.run(
+              `INSERT INTO installments (invoice_id, amount, due_on)
+               VALUES (?,?,?)`,
+              [invoiceId, amounts[i], dues[i]]
             );
           }
         }
@@ -149,6 +209,7 @@ app.post('/new', (req, res) => {
     );
   });
 });
+
 
 function safeFileName(text) {
   return text

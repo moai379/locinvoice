@@ -13,13 +13,42 @@
   <label>Total Amount</label><br>
   <input name="total" required><br><br>
 
-  <label>
-    <input type="checkbox" name="inst">
-    Enable Installments
-  </label><br><br>
+  <label>Installment Mode</label>
+  <select name="installment_mode" id="installmentMode" onchange="toggleInstallments()">
+    <option value="NONE">No Installments</option>
+    <option value="EQUAL">Equal Installments</option>
+    <option value="MANUAL">Manual Installments</option>
+  </select>
 
-  <label>No. of Months (if enabled)</label><br>
-  <input name="months"><br><br>
+  <div id="equalInstallments" style="display:none;">
+    <label>Number of Months</label>
+    <input type="number" name="months">
+  </div>
+
+  <div id="manualInstallments" style="display:none;">
+    <table>
+      <tr>
+        <th>Amount</th>
+        <th>Due Date</th>
+      </tr>
+      <% for (let i = 0; i < 10; i++) { %>
+        <tr>
+          <td><input type="number" name="manual_amount[]"></td>
+          <td><input type="date" name="manual_due[]"></td>
+        </tr>
+      <% } %>
+    </table>
+  </div>
+
+
 
   <button type="submit">Create Invoice</button>
 </form>
+
+<script>
+function toggleInstallments() {
+  const mode = document.getElementById('installmentMode').value;
+  document.getElementById('equalInstallments').style.display = mode === 'EQUAL' ? 'block' : 'none';
+  document.getElementById('manualInstallments').style.display = mode === 'MANUAL' ? 'block' : 'none';
+}
+</script>

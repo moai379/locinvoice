@@ -299,6 +299,106 @@ button.danger:hover {
 } /* Watermark shows in pdf as well as when viewed in browser */
 
 
+.invoice-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.company-left {
+  display: flex;
+  gap: 15px;
+}
+
+.company-details {
+  font-size: 0.9rem;
+}
+
+.company-right h1 {
+  font-size: 1.4rem;
+  margin-top: 10px;
+}
+
+.divider {
+  margin: 15px 0;
+  border: none;
+  border-top: 2px solid #555;
+}
+
+.invoice-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.bill-to {
+  font-size: 0.9rem;
+}
+
+.invoice-info div {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  font-size: 0.85rem;
+}
+
+.invoice-info span {
+  font-weight: 600;
+}
+
+.invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.invoice-table th,
+.invoice-table td {
+  border: 1px solid #444;
+  padding: 8px;
+  font-size: 0.85rem;
+}
+
+.invoice-table th {
+  background: #f3f3f3;
+}
+
+.totals {
+  width: 300px;
+  margin-left: auto;
+  margin-top: 15px;
+  font-size: 0.85rem;
+}
+
+.totals-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  border-bottom: 1px solid #999;
+}
+
+.totals-row.balance {
+  font-weight: 700;
+}
+
+.terms {
+  margin-top: 25px;
+  font-size: 0.8rem;
+}
+
+.terms ol {
+  padding-left: 18px;
+}
+
+.signature {
+  margin-top: 50px;
+  text-align: right;
+}
+
+.signature-img {
+  height: 40px;
+}
+
 
 
 /* -----------------------------

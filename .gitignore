@@ -3,3 +3,4 @@ invoices/
 database.db
 assets/
 views/terms.ejs
+.env
