@@ -4,6 +4,10 @@
   <div class="company-left">
     <img src="/assets/logo.png" class="logo">
 
+    <% if (invoice.status === 'CANCELLED') { %>
+      <div class="cancel-watermark">CANCELLED</div>  <div class="cancel-watermark">CANCELLED</div>
+    <% } %>
+
     <div class="company-details">
       <strong><%= company.name %>,</strong><br>
       <%= company.address1 %><br>
@@ -73,7 +77,7 @@
   </div>
 </div>
 
-<% -include('terms') %>
+<%- include('terms') %>
 
 <div class="signature">
   <div class="sign-box">

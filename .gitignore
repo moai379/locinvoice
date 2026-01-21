@@ -4,3 +4,4 @@ database.db
 assets/
 views/terms.ejs
 .env
+logs/

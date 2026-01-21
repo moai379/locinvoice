@@ -10,6 +10,8 @@
     "ejs": "^4.0.1",
     "express": "^4.19.2",
     "puppeteer": "^22.8.0",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.0.2",
+    "winston": "^3.19.0",
+    "winston-daily-rotate-file": "^5.0.0"
   }
 }

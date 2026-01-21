@@ -4,7 +4,8 @@ const sqlite3 = require('sqlite3').verbose();
 const puppeteer = require('puppeteer');
 const path = require('path');
 const fs = require('fs');
-const ejs = require('ejs');
+const { error } = require('console');
+const { successlog, errorlog } = require('./util/logger');
 
 const app = express();
 app.set('view engine', 'ejs');
@@ -13,6 +14,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static('public'));
+
 
 app.locals.company = {
   name: process.env.COMPANY_NAME,
@@ -103,6 +105,7 @@ app.get('/', (req, res) => {
   db.all(listQuery, (err, invoices) => {
     if (err) {
       console.error(err);
+      errorlog.error('Failed to fetch invoices', { error: err.message, query: listQuery });
       return res.sendStatus(500);
     }
 
@@ -141,6 +144,7 @@ app.get('/new', (req, res) => {
 app.post('/new', (req, res) => {
   const total = parseInt(req.body.total);
   const mode = req.body.installment_mode || 'NONE';
+  successlog.info('New invoice request', { client: req.body.client, total, mode });
 
   getNextInvoiceNumber((invNo) => {
 
@@ -166,6 +170,7 @@ app.post('/new', (req, res) => {
       function (err) {
         if (err) {
           console.error(err);
+          errorlog.error('Failed to create invoice', { error: err.message, client: req.body.client });
           return res.status(500).send(err.message);
         }
 
@@ -203,6 +208,8 @@ app.post('/new', (req, res) => {
             );
           }
         }
+
+        successlog.info('Invoice created', { invoiceId: this.lastID, invoice_number: invNo, client: req.body.client, total });
 
         res.redirect('/');
       }
@@ -249,6 +256,7 @@ app.post('/cancel/:no', (req, res) => {
     (err) => {
       if (err) {
         console.error('Failed to cancel invoice', err);
+        errorlog.error('Failed to cancel invoice', { error: err.message, invoiceNo });
       }
       res.redirect('/');
     }
@@ -268,6 +276,7 @@ app.post('/delete/:no', (req, res) => {
 
       if (err || !invoice) {
         console.error('Invoice not found');
+        errorlog.error('Invoice not found for deletion', { invoiceNo, error: err?.message });
         return res.redirect('/');
       }
 
@@ -292,7 +301,6 @@ app.post('/delete/:no', (req, res) => {
             console.error('Failed to delete installments', err1);
             return res.redirect('/');
           }
-
           // Delete invoice
           db.run(
             "DELETE FROM invoices WHERE id=?",
@@ -301,6 +309,7 @@ app.post('/delete/:no', (req, res) => {
               if (err2) {
                 console.error('Failed to delete invoice', err2);
               }
+              successlog.info('Invoice successfully deleted', { invoiceId, invoiceNo });
               res.redirect('/');
             }
           );
@@ -314,6 +323,7 @@ app.post('/delete/:no', (req, res) => {
 
 app.get('/pdf/:no', async (req, res) => {
   const invoiceNo = req.params.no;
+  successlog.info('PDF generation started', { invoiceNo });
 
   db.get(
     "SELECT invoice_number, client FROM invoices WHERE invoice_number=?",
@@ -321,6 +331,7 @@ app.get('/pdf/:no', async (req, res) => {
     async (err, invoice) => {
 
       if (!invoice) {
+        errorlog.error('Invoice not found for PDF', { invoiceNo });
         return res.status(404).send('Invoice not found');
       }
 
@@ -356,6 +367,9 @@ app.get('/pdf/:no', async (req, res) => {
 
       await browser.close();
       res.download(filePath);
+
+      successlog.info('PDF generated', { invoiceNo, filePath });
+
     }
   );
 });
