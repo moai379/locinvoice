@@ -1,3 +1,9 @@
+// Source - https://stackoverflow.com/a/40906364
+// Posted by KeshavDulal, modified by community. See post 'Timeline' for change history
+// Retrieved 2026-01-21, License - CC BY-SA 3.0
+
+// Modified extensively by Rajat Tyagi (@moai379) to fit project needs
+
 const winston = require('winston');
 const winstonRotator = require('winston-daily-rotate-file');
 const path = require('path');
